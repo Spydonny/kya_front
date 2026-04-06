@@ -1,12 +1,17 @@
-﻿:root {
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+:root {
   color: #111827;
   background:
-    radial-gradient(circle at top, rgba(16, 185, 129, 0.18), transparent 40%),
-    linear-gradient(180deg, #f6fef9 0%, #ecfdf5 100%);
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    radial-gradient(circle at 20% -10%, rgba(128, 161, 146, 0.18), transparent 42%),
+    radial-gradient(circle at 80% 0%, rgba(181, 198, 188, 0.35), transparent 44%),
+    #eaf0ed;
+  font-family: "Manrope", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-html {
+html,
+body,
+#root {
   min-height: 100%;
 }
 
@@ -17,19 +22,34 @@ body {
   background: transparent;
 }
 
+body::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  opacity: 0.16;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(72, 87, 79, 0.05) 0,
+    rgba(72, 87, 79, 0.05) 1px,
+    transparent 1px,
+    transparent 8px
+  );
+}
+
 button,
 input,
 textarea {
   font: inherit;
 }
 
-#root {
-  min-height: 100vh;
+.font-mono {
+  font-family: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
 }
 
 .wallet-adapter-modal-wrapper {
-  background: #fcfffd;
-  color: #111827;
+  background: #f2f8f5;
+  color: #17221d;
 }
 
 .wallet-adapter-modal-title,

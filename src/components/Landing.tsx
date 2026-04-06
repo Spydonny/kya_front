@@ -5,9 +5,9 @@ interface LandingProps {
 }
 
 const stats = [
-  { value: "142", label: "Agents registered", icon: FaRobot },
-  { value: "8,421", label: "Verifications", icon: FaShieldAlt },
-  { value: "312", label: "Rejected transactions", icon: FaBan },
+  { value: "142", label: "Agents registered", icon: FaRobot, accent: "text-emerald-700" },
+  { value: "8,421", label: "Verifications", icon: FaShieldAlt, accent: "text-teal-700" },
+  { value: "312", label: "Rejected transactions", icon: FaBan, accent: "text-amber-700" },
 ];
 
 const steps = [
@@ -18,58 +18,78 @@ const steps = [
 
 export default function Landing({ onNavigate }: LandingProps) {
   return (
-    <main className="mx-auto max-w-5xl px-4 py-6">
-      <h1 className="text-2xl font-medium text-emerald-900">Know Your Agent</h1>
-      <p className="mt-2 max-w-2xl text-sm text-gray-600">
-        AI verification for every agent action with transparent history and reputation.
-      </p>
+    <main className="mx-auto max-w-7xl px-5 py-8">
+      <div className="grid gap-4 lg:grid-cols-12">
+        <section className="rounded-3xl border border-[#d3ddd7] bg-white/90 p-6 shadow-[0_10px_30px_rgba(47,74,60,0.08)] lg:col-span-8">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[#5f7469]">Know Your Agent</p>
+          <h1 className="mt-2 text-4xl font-semibold tracking-[-0.03em] text-[#14211b]">Trust Before Transaction</h1>
+          <p className="mt-3 max-w-2xl text-sm text-[#4d6258]">
+            AI verification for each agent decision, with on-chain reputation and transparent reasoning logs.
+          </p>
 
-      <div className="mt-4 flex gap-2 text-sm">
-        <button
-          type="button"
-          className="flex items-center gap-2 rounded bg-emerald-700 px-3 py-1.5 text-white transition-colors duration-150 hover:bg-emerald-600"
-          onClick={() => onNavigate("register")}
-        >
-          <FaCheckCircle className="text-xs" />
-          Register agent
-        </button>
-        <button
-          type="button"
-          className="flex items-center gap-2 rounded px-3 py-1.5 text-emerald-700 transition-colors duration-150 hover:bg-emerald-100"
-          onClick={() => onNavigate("explorer")}
-        >
-          Check agent
-          <FaArrowRight className="text-xs" />
-        </button>
-      </div>
+          <div className="mt-5 flex flex-wrap gap-3 text-sm">
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#173528] px-4 py-2 text-white transition-colors duration-150 hover:bg-[#1e4433]"
+              onClick={() => onNavigate("register")}
+            >
+              <FaCheckCircle className="text-xs" />
+              Register agent
+            </button>
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-xl border border-[#cad8d1] bg-[#f7faf8] px-4 py-2 text-[#1f3128] transition-colors duration-150 hover:border-[#b6cabc]"
+              onClick={() => onNavigate("explorer")}
+            >
+              Check agent
+              <FaArrowRight className="text-xs" />
+            </button>
+          </div>
+        </section>
 
-      <ul className="mt-8 grid gap-4 text-sm sm:grid-cols-3">
-        {stats.map((item) => {
-          const Icon = item.icon;
-          return (
-            <li key={item.label}>
-              <p className="flex items-center gap-2 text-xl text-gray-900">
-                <Icon className="text-sm text-emerald-600" />
-                {item.value}
-              </p>
-              <p className="text-gray-600">{item.label}</p>
-            </li>
-          );
-        })}
-      </ul>
-
-      <h2 className="mt-8 text-sm text-gray-500">How it works</h2>
-      <ol className="mt-2 space-y-3 text-sm">
-        {steps.map((step, index) => (
-          <li key={step.title} className="flex gap-3">
-            <span className="w-4 text-emerald-600">{index + 1}</span>
-            <div>
-              <p className="text-gray-900">{step.title}</p>
-              <p className="text-gray-600">{step.description}</p>
+        <section className="rounded-3xl border border-[#d3ddd7] bg-white/90 p-6 shadow-[0_10px_30px_rgba(47,74,60,0.08)] lg:col-span-4">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[#5f7469]">System State</p>
+          <div className="mt-3 space-y-2">
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+              Verification network healthy
             </div>
-          </li>
-        ))}
-      </ol>
+            <div className="rounded-xl border border-[#dbe5df] bg-[#f8fbf9] px-3 py-2 text-sm text-[#456055]">
+              99.2% deterministic policy match
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-[#d3ddd7] bg-white/90 p-6 shadow-[0_10px_30px_rgba(47,74,60,0.08)] lg:col-span-7">
+          <h2 className="text-lg font-semibold text-[#1a2b23]">Platform Snapshot</h2>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-3">
+            {stats.map((item) => {
+              const Icon = item.icon;
+              return (
+                <li key={item.label} className="rounded-2xl border border-[#dbe5df] bg-[#f8fbf9] p-3">
+                  <p className={`flex items-center gap-2 text-2xl font-semibold ${item.accent}`}>
+                    <Icon className="text-sm" />
+                    {item.value}
+                  </p>
+                  <p className="mt-1 text-sm text-[#53685d]">{item.label}</p>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        <section className="rounded-3xl border border-[#d3ddd7] bg-white/90 p-6 shadow-[0_10px_30px_rgba(47,74,60,0.08)] lg:col-span-5">
+          <h2 className="text-lg font-semibold text-[#1a2b23]">How It Works</h2>
+          <ol className="mt-3 space-y-3">
+            {steps.map((step, index) => (
+              <li key={step.title} className="rounded-xl border border-[#dbe5df] bg-[#f9fcfa] p-3">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-[#5d7368]">Step {index + 1}</p>
+                <p className="mt-1 text-sm font-medium text-[#1f3028]">{step.title}</p>
+                <p className="mt-1 text-sm text-[#51665b]">{step.description}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+      </div>
     </main>
   );
 }
