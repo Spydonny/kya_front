@@ -1,8 +1,5 @@
 import { FaArrowRight, FaBan, FaCheckCircle, FaRobot, FaShieldAlt } from "react-icons/fa";
-
-interface LandingProps {
-  onNavigate: (page: string) => void;
-}
+import { useKyaRuntime } from "../kya/KyaRuntime";
 
 const stats = [
   { value: "142", label: "Agents registered", icon: FaRobot, accent: "text-emerald-700" },
@@ -11,12 +8,14 @@ const stats = [
 ];
 
 const steps = [
-  { title: "Register agent", description: "Create a profile, set limits, and mint a credential NFT." },
+  { title: "Register agent", description: "Create a profile, set limits, and derive an on-chain PDA." },
   { title: "Verify intent", description: "Every transaction is checked before execution." },
   { title: "Record result", description: "Approval and rejection decisions are saved on-chain." },
 ];
 
-export default function Landing({ onNavigate }: LandingProps) {
+export default function Landing() {
+  const { navigate } = useKyaRuntime();
+
   return (
     <main className="mx-auto max-w-7xl px-5 py-8">
       <div className="grid gap-4 lg:grid-cols-12">
@@ -31,7 +30,7 @@ export default function Landing({ onNavigate }: LandingProps) {
             <button
               type="button"
               className="inline-flex items-center gap-2 rounded-xl bg-[#173528] px-4 py-2 text-white transition-colors duration-150 hover:bg-[#1e4433]"
-              onClick={() => onNavigate("register")}
+              onClick={() => navigate({ view: "register" })}
             >
               <FaCheckCircle className="text-xs" />
               Register agent
@@ -39,7 +38,7 @@ export default function Landing({ onNavigate }: LandingProps) {
             <button
               type="button"
               className="inline-flex items-center gap-2 rounded-xl border border-[#cad8d1] bg-[#f7faf8] px-4 py-2 text-[#1f3128] transition-colors duration-150 hover:border-[#b6cabc]"
-              onClick={() => onNavigate("explorer")}
+              onClick={() => navigate({ view: "explorer" })}
             >
               Check agent
               <FaArrowRight className="text-xs" />

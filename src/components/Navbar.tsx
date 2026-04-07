@@ -1,26 +1,24 @@
 import { FaChartBar, FaCompass, FaFlask, FaHome, FaLeaf } from "react-icons/fa";
-import WalletControls from "./WalletControls";
-
-interface NavbarProps {
-  currentPage: string;
-  onNavigate: (page: string) => void;
-}
+import { useKyaRuntime } from "../kya/KyaRuntime";
 
 const navItems = [
   { id: "landing", label: "Home", icon: FaHome },
   { id: "dashboard", label: "Dashboard", icon: FaChartBar },
   { id: "explorer", label: "Explorer", icon: FaCompass },
-  { id: "demo", label: "Demo", icon: FaFlask },
+  { id: "demo", label: "Verification Lab", icon: FaFlask },
 ];
 
-export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
+export default function Navbar() {
+  const { view, navigate } = useKyaRuntime();
+  const currentPage = view.view;
+
   return (
-    <header className="sticky top-0 z-30 border-b border-[#d3ddd7] bg-[#f4f8f6]/90 backdrop-blur-sm">
+    <header className="sticky top-0 z-30 border-b border-[#d3ddd7] bg-white backdrop-blur-sm">
       <div className="mx-auto flex min-h-16 max-w-7xl flex-wrap items-center gap-4 px-5 py-3">
         <button
           type="button"
           className="inline-flex items-center gap-2 rounded-full border border-[#d5e1da] bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#1f3128] transition-colors duration-150 hover:border-[#b9ccc1]"
-          onClick={() => onNavigate("landing")}
+          onClick={() => navigate({ view: "landing" })}
         >
           <FaLeaf className="text-[10px] text-emerald-600" />
           KYA System
@@ -40,7 +38,7 @@ export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
                     ? "flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-emerald-800"
                     : "flex items-center gap-1.5 rounded-full border border-transparent px-3 py-1.5 text-[#5f7469] transition-colors duration-150 hover:border-[#c9d8d0] hover:bg-white hover:text-[#22352b]"
                 }
-                onClick={() => onNavigate(item.id)}
+                onClick={() => navigate({ view: item.id as any })}
               >
                 <Icon className="text-[11px]" />
                 {item.label}
@@ -48,8 +46,6 @@ export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
             );
           })}
         </nav>
-
-        <WalletControls />
       </div>
     </header>
   );

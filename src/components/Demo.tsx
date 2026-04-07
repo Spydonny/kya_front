@@ -1,54 +1,43 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { FaBolt, FaCheckCircle, FaFlask, FaMagic, FaTimesCircle } from "react-icons/fa";
-
-type DemoResult = {
-  verdict: "approve" | "reject";
-  explanation: string;
-  txHash: string;
-  trustDelta: number;
-} | null;
+import { useKyaRuntime } from "../kya/KyaRuntime";
+import VerificationStepper from "./VerificationStepper";
 
 export default function Demo() {
+  const { agents, runVerification, activeVerification } = useKyaRuntime();
+  const [agentId, setAgentId] = useState<string>(agents[0]?.id ?? "");
   const [actionType, setActionType] = useState("transfer");
   const [amount, setAmount] = useState("");
   const [address, setAddress] = useState("");
   const [context, setContext] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<DemoResult>(null);
+  const selectedAgent = useMemo(() => agents.find((a) => a.id === agentId), [agents, agentId]);
+  const running = activeVerification?.running && activeVerification.agentId === agentId;
+  const steps = activeVerification?.agentId === agentId ? activeVerification.steps : null;
+  const result = activeVerification?.agentId === agentId ? activeVerification.result : null;
 
   const fillSuspicious = () => {
     setActionType("transfer");
-    setAmount("50");
-    setAddress("3x7M...unknown");
+    setAmount(String(Math.max(10.2, (selectedAgent?.transactionLimitSol ?? 1) * 2.8).toFixed(3)));
+    setAddress("3x7M...unkn");
     setContext("");
-    setResult(null);
   };
 
   const fillLegit = () => {
     setActionType("pay");
-    setAmount("0.1");
+    setAmount("0.023");
     setAddress("GpuS...rv1c");
     setContext("Monthly GPU compute subscription payment");
-    setResult(null);
   };
 
   const handleVerify = () => {
-    setResult(null);
-    setLoading(true);
-
-    setTimeout(() => {
-      const isSuspicious = Number(amount) > 10;
-
-      setResult({
-        verdict: isSuspicious ? "reject" : "approve",
-        explanation: isSuspicious
-          ? "Large transfer to an unknown address with no context. Amount exceeds normal operating range."
-          : "Payment to a known provider. Amount is within limits and consistent with prior activity.",
-        txHash: isSuspicious ? "4xK9...rEj7" : "7mAp...pRv3",
-        trustDelta: isSuspicious ? -3 : 1,
-      });
-      setLoading(false);
-    }, 2000);
+    if (!selectedAgent) return;
+    runVerification({
+      agentId: selectedAgent.id,
+      action: actionType as any,
+      amountSol: Number(amount || "0"),
+      recipient: address,
+      context,
+    });
   };
 
   return (
@@ -60,16 +49,33 @@ export default function Demo() {
             Live Verification Lab
           </h2>
           <p className="mt-2 text-sm text-[#4f6359]">
-            Run transaction intent simulations and inspect how trust score changes in real time.
+            Run transaction intent checks and inspect how trust score changes in real time.
           </p>
 
           <div className="mt-5 space-y-4">
+            <label className="block text-sm text-[#30443a]">
+              Agent
+              <select
+                className="mt-1.5 w-full rounded-xl border border-[#d3dfd8] bg-[#f8fbf9] px-3 py-2.5 text-sm text-[#17261f] outline-none transition-colors duration-150 focus:border-emerald-400"
+                value={agentId}
+                onChange={(e) => setAgentId(e.target.value)}
+                disabled={running}
+              >
+                {agents.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name} ({a.id})
+                  </option>
+                ))}
+              </select>
+            </label>
+
             <label className="block text-sm text-[#30443a]">
               Action type
               <select
                 className="mt-1.5 w-full rounded-xl border border-[#d3dfd8] bg-[#f8fbf9] px-3 py-2.5 text-sm text-[#17261f] outline-none transition-colors duration-150 focus:border-emerald-400"
                 value={actionType}
                 onChange={(event) => setActionType(event.target.value)}
+                disabled={running}
               >
                 <option value="transfer">Transfer</option>
                 <option value="pay">Pay</option>
@@ -85,6 +91,7 @@ export default function Demo() {
                 placeholder="0.1"
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
+                disabled={running}
               />
             </label>
 
@@ -95,6 +102,7 @@ export default function Demo() {
                 placeholder="7xK9...3fB2"
                 value={address}
                 onChange={(event) => setAddress(event.target.value)}
+                disabled={running}
               />
             </label>
 
@@ -105,17 +113,19 @@ export default function Demo() {
                 placeholder="Why is this transaction needed?"
                 value={context}
                 onChange={(event) => setContext(event.target.value)}
+                disabled={running}
               />
             </label>
 
             <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#173528] px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-[#1e4433]"
+                disabled={!selectedAgent || running}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#173528] px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-[#1e4433] disabled:cursor-not-allowed disabled:opacity-70"
                 onClick={handleVerify}
               >
                 <FaBolt className="text-xs" />
-                Send for verification
+                {running ? "Running pipeline..." : "Send for verification"}
               </button>
 
               <button
@@ -141,19 +151,19 @@ export default function Demo() {
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-[#1a2b23]">Verification Output</h3>
             <span className="rounded-full border border-[#d1ddd6] bg-[#f7faf8] px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-[#577064]">
-              Simulated
+              Live pipeline
             </span>
           </div>
 
-          {!loading && !result ? (
+          {!running && !result ? (
             <p className="mt-4 text-sm text-[#5a7065]">Submit a transaction intent to see policy reasoning.</p>
           ) : null}
 
-          {loading ? (
+          {running ? (
             <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
               <p className="inline-flex items-center gap-2">
                 <FaMagic className="text-xs" />
-                Analyzing transaction and matching policy constraints...
+                Pipeline running with staged delays (intent, policy, risk, preflight, decision)...
               </p>
             </div>
           ) : null}
@@ -161,30 +171,41 @@ export default function Demo() {
           {result ? (
             <div className="mt-4 space-y-3 rounded-2xl border border-[#d8e3dd] bg-[#f9fcfa] p-4 text-sm">
               <p className="flex items-center gap-2 font-medium text-[#1e2d26]">
-                {result.verdict === "approve" ? (
+                {result.decision === "approve" ? (
                   <FaCheckCircle className="text-sm text-emerald-600" />
                 ) : (
                   <FaTimesCircle className="text-sm text-amber-500" />
                 )}
-                {result.verdict.toUpperCase()}
+                {result.decision.toUpperCase()}
               </p>
-              <p className="text-[#4b6156]">{result.explanation}</p>
+              <p className="text-[#4b6156]">{result.reason}</p>
               <dl className="space-y-2 text-[#4a6156]">
                 <div className="flex justify-between gap-3">
                   <dt>On-chain</dt>
-                  <dd className="font-medium text-[#1d2c25]">Recorded</dd>
+                  <dd className="font-medium text-[#1d2c25]">{result.wroteMockChainRecord ? "Mock write" : "Skipped"}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt>TX hash</dt>
-                  <dd className="font-mono text-[#1d2c25]">{result.txHash}</dd>
+                  <dd className="font-mono text-[#1d2c25]">{result.txSig}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt>NFT update</dt>
+                  <dt>PDA score update</dt>
                   <dd className={result.trustDelta > 0 ? "text-emerald-700" : "text-amber-700"}>
-                    {result.trustDelta > 0 ? `Trust +${result.trustDelta}` : `Trust ${result.trustDelta}`}
+                    {result.trustDelta > 0 ? `Trust +${result.trustDelta}` : `Trust ${result.trustDelta}`} (now{" "}
+                    {result.updatedTrustScore}/100)
                   </dd>
                 </div>
               </dl>
+            </div>
+          ) : null}
+
+          {steps?.length ? (
+            <div className="mt-4">
+              <VerificationStepper
+                steps={steps}
+                title="Pipeline details"
+                subtitle="Step-by-step status, explanations, and logs."
+              />
             </div>
           ) : null}
         </section>

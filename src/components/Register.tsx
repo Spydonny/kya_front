@@ -1,22 +1,47 @@
-import { useState, type FormEvent } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { FaCheckCircle, FaShieldAlt, FaUserPlus } from "react-icons/fa";
-import { formatWalletAddress } from "../utils/formatWalletAddress";
+import { useMemo, useState, type FormEvent } from "react";
+import { FaCheckCircle, FaExternalLinkAlt, FaShieldAlt, FaUserPlus } from "react-icons/fa";
+import { useKyaRuntime } from "../kya/KyaRuntime";
+import type { AgentRecord } from "../kya/types";
+
+function short(addr: string) {
+  return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
+}
 
 export default function Register() {
+  const { createAgent, navigate } = useKyaRuntime();
   const [submitted, setSubmitted] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [created, setCreated] = useState<AgentRecord | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [maxTx, setMaxTx] = useState("");
-  const { connected, publicKey } = useWallet();
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const maxTxNum = useMemo(() => {
+    const n = Number(maxTx);
+    if (!Number.isFinite(n)) return 0;
+    return n;
+  }, [maxTx]);
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!connected || !name.trim()) return;
-    setSubmitted(true);
+    if (!name.trim()) return;
+    setCreating(true);
+    try {
+      const agent = await createAgent({
+        name,
+        description,
+        transactionLimitSol: maxTxNum || 0.35,
+      });
+      setCreated(agent);
+      setSubmitted(true);
+    } finally {
+      setCreating(false);
+    }
   };
 
-  if (submitted) {
+  const explorerUrl = created ? `https://explorer.solana.com/address/${created.pdaAddress}?cluster=devnet` : "";
+
+  if (submitted && created) {
     return (
       <main className="mx-auto max-w-4xl px-5 py-8">
         <section className="rounded-3xl border border-emerald-200 bg-white/90 p-6 shadow-[0_10px_30px_rgba(47,74,60,0.08)]">
@@ -24,22 +49,72 @@ export default function Register() {
             <FaCheckCircle className="text-emerald-600" />
             Agent Registered
           </h2>
-          <p className="mt-2 text-sm text-[#4f6359]">Credential NFT minted on Solana Devnet.</p>
+          <p className="mt-2 text-sm text-[#4f6359]">
+            Registration complete. Record stored locally and a <span className="font-medium">mock blockchain write</span> was
+            produced for the PDA mapping.
+          </p>
 
           <dl className="mt-5 grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl border border-[#dbe5df] bg-[#f8fbf9] p-3">
-              <dt className="text-[11px] uppercase tracking-[0.13em] text-[#5f7369]">Owner wallet</dt>
-              <dd className="mt-1 font-mono text-sm text-[#1f3028]">{formatWalletAddress(publicKey?.toBase58())}</dd>
+              <dt className="text-[11px] uppercase tracking-[0.13em] text-[#5f7369]">Agent ID</dt>
+              <dd className="mt-1 font-mono text-sm text-[#1f3028]">{created.id}</dd>
             </div>
             <div className="rounded-xl border border-[#dbe5df] bg-[#f8fbf9] p-3">
-              <dt className="text-[11px] uppercase tracking-[0.13em] text-[#5f7369]">Agent ID</dt>
-              <dd className="mt-1 font-mono text-sm text-[#1f3028]">agt_8f2k9x</dd>
+              <dt className="text-[11px] uppercase tracking-[0.13em] text-[#5f7369]">Agent PDA</dt>
+              <dd className="mt-1 font-mono text-sm text-[#1f3028]">{short(created.pdaAddress)}</dd>
             </div>
             <div className="rounded-xl border border-[#dbe5df] bg-[#f8fbf9] p-3 sm:col-span-2">
-              <dt className="text-[11px] uppercase tracking-[0.13em] text-[#5f7369]">NFT</dt>
-              <dd className="mt-1 break-all font-mono text-sm text-[#1f3028]">https://solscan.io/token/7xK...</dd>
+              <dt className="text-[11px] uppercase tracking-[0.13em] text-[#5f7369]">Explorer</dt>
+              <dd className="mt-1 text-sm">
+                <a
+                  href={explorerUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-mono text-[#1f3028] underline decoration-[#b7c8be] underline-offset-2 hover:text-[#163126]"
+                >
+                  {explorerUrl}
+                </a>
+              </dd>
             </div>
           </dl>
+
+          <div className="mt-5 rounded-2xl border border-[#dbe5df] bg-white p-4">
+            <p className="text-[10px] uppercase tracking-[0.14em] text-[#607469]">Agent preview</p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div>
+                <p className="text-sm font-semibold text-[#1f3128]">{created.name}</p>
+                <p className="mt-1 text-sm text-[#4f6359]">{created.description}</p>
+              </div>
+              <dl className="grid gap-2 text-sm text-[#4f6359]">
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-[#dbe5df] bg-[#f8fbf9] px-3 py-2">
+                  <dt>Transaction limit</dt>
+                  <dd className="font-mono text-[#1f3128]">{created.transactionLimitSol.toFixed(3)} SOL</dd>
+                </div>
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-[#dbe5df] bg-[#f8fbf9] px-3 py-2">
+                  <dt>Trust score</dt>
+                  <dd className="font-mono text-[#1f3128]">{created.trustScore} / 100</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-3">
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#173528] px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-[#1e4433]"
+              onClick={() => navigate({ view: "agent", agentId: created.id })}
+            >
+              Open agent profile
+              <FaExternalLinkAlt className="text-[11px]" />
+            </button>
+            <button
+              type="button"
+              className="rounded-xl border border-[#cad8d1] bg-[#f7faf8] px-4 py-2 text-sm text-[#1f3128] transition-colors duration-150 hover:border-[#b6cabc]"
+              onClick={() => navigate({ view: "dashboard" })}
+            >
+              Go to dashboard
+            </button>
+          </div>
         </section>
       </main>
     );
@@ -54,7 +129,7 @@ export default function Register() {
             New Agent
           </h2>
           <p className="mt-2 text-sm text-[#4f6359]">
-            Create an agent identity, set its execution limits, and mint a credential NFT.
+            Create an agent identity, set execution limits, and derive its on-chain PDA profile.
           </p>
 
           <form className="mt-5 space-y-4" onSubmit={submit}>
@@ -91,10 +166,10 @@ export default function Register() {
 
             <button
               type="submit"
-              className="rounded-xl bg-[#173528] px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-[#1e4433] disabled:cursor-not-allowed disabled:bg-[#9fb7ab]"
-              disabled={!connected}
+              disabled={creating}
+              className="rounded-xl bg-[#173528] px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-[#1e4433] disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Register and mint NFT
+              {creating ? "Registering..." : "Register agent"}
             </button>
           </form>
         </section>
@@ -102,27 +177,19 @@ export default function Register() {
         <section className="rounded-3xl border border-[#d3ddd7] bg-white/90 p-6 shadow-[0_10px_30px_rgba(47,74,60,0.08)] lg:col-span-5">
           <div className="flex items-center gap-2 text-[#1b2b23]">
             <FaShieldAlt className="text-sm text-emerald-600" />
-            <p className="text-sm font-medium uppercase tracking-[0.16em]">Minting Context</p>
+            <p className="text-sm font-medium uppercase tracking-[0.16em]">Registration Context</p>
           </div>
 
           <p className="mt-3 text-sm text-[#4f6359]">
-            {connected
-              ? `Minting wallet: ${formatWalletAddress(publicKey?.toBase58())}`
-              : "Connect a Solana wallet from the top-right before minting a credential NFT."}
+            Wallet connection is not required in demo mode. Agent identity is generated from local inputs.
           </p>
 
           <div className="mt-4 space-y-2">
             <div className="rounded-xl border border-[#dbe5df] bg-[#f8fbf9] px-3 py-2 text-sm text-[#4b6156]">
-              Credential NFT includes owner linkage and agent policy envelope.
+              Agent PDA stores deterministic authority and profile linkage.
             </div>
-            <div
-              className={`rounded-xl px-3 py-2 text-sm ${
-                connected
-                  ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
-                  : "border border-amber-200 bg-amber-50 text-amber-800"
-              }`}
-            >
-              {connected ? "Wallet connected. Ready to mint." : "Wallet not connected."}
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+              Ready to register without wallet adapter.
             </div>
           </div>
         </section>

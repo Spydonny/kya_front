@@ -46,13 +46,3 @@ textarea {
 .font-mono {
   font-family: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
 }
-
-.wallet-adapter-modal-wrapper {
-  background: #f2f8f5;
-  color: #17221d;
-}
-
-.wallet-adapter-modal-title,
-.wallet-adapter-modal-list .wallet-adapter-button {
-  color: inherit;
-}

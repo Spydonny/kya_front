@@ -1,4 +1,3 @@
-import { useState } from "react";
 import AgentPage from "./components/AgentPage";
 import Dashboard from "./components/Dashboard";
 import Demo from "./components/Demo";
@@ -6,28 +5,29 @@ import Explorer from "./components/Explorer";
 import Landing from "./components/Landing";
 import Navbar from "./components/Navbar";
 import Register from "./components/Register";
+import { useKyaRuntime } from "./kya/KyaRuntime";
 
 export default function App() {
-  const [page, setPage] = useState<string>("landing");
+  const { view } = useKyaRuntime();
 
   const pageContent =
-    page === "register" ? (
+    view.view === "register" ? (
       <Register />
-    ) : page === "dashboard" ? (
-      <Dashboard onNavigate={setPage} />
-    ) : page === "agent" ? (
-      <AgentPage />
-    ) : page === "demo" ? (
+    ) : view.view === "dashboard" ? (
+      <Dashboard />
+    ) : view.view === "agent" ? (
+      <AgentPage agentId={view.agentId} />
+    ) : view.view === "demo" ? (
       <Demo />
-    ) : page === "explorer" ? (
-      <Explorer onNavigate={setPage} />
+    ) : view.view === "explorer" ? (
+      <Explorer />
     ) : (
-      <Landing onNavigate={setPage} />
+      <Landing />
     );
 
   return (
     <div className="min-h-screen bg-[#eef3f0] text-gray-900">
-      <Navbar currentPage={page} onNavigate={setPage} />
+      <Navbar />
       {pageContent}
     </div>
   );

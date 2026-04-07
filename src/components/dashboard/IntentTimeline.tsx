@@ -10,9 +10,9 @@ const stages = [
     text: "Matched low-risk policy profile and whitelist destination set.",
   },
   {
-    title: "Simulation",
+    title: "Preflight Check",
     time: "08:42:12",
-    text: "Pre-flight simulation passed. No privileged instruction mismatch.",
+    text: "Preflight checks passed. No privileged instruction mismatch.",
   },
   {
     title: "Execution Gate",

@@ -1,97 +1,43 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { FaArrowRight, FaChevronDown, FaChevronUp, FaSearch } from "react-icons/fa";
+import { useKyaRuntime } from "../kya/KyaRuntime";
+import type { VerificationDecision } from "../kya/types";
 
-interface ExplorerProps {
-  onNavigate: (page: string) => void;
+function timeAgo(ts: number) {
+  const delta = Math.max(0, Date.now() - ts);
+  const minutes = Math.round(delta / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} hours ago`;
+  const days = Math.round(hours / 24);
+  return `${days} days ago`;
 }
 
-type FeedItem = {
-  id: string;
-  agentId: string;
-  amount: string;
-  address: string;
-  time: string;
-  verdict: "approve" | "reject";
-  rationale: string;
-};
+function decisionTone(decision: VerificationDecision) {
+  if (decision === "approve") return "border-emerald-200 bg-emerald-50 text-emerald-800";
+  if (decision === "flag") return "border-amber-200 bg-amber-50 text-amber-800";
+  return "border-rose-200 bg-rose-50 text-rose-800";
+}
 
-const feedItems: FeedItem[] = [
-  {
-    id: "f-1",
-    agentId: "agt_8f2k",
-    amount: "0.1 SOL",
-    address: "GpuS...rv1c",
-    time: "2 min ago",
-    verdict: "approve",
-    rationale: "Known vendor, recurring billing pattern.",
-  },
-  {
-    id: "f-2",
-    agentId: "agt_3m2p",
-    amount: "50 SOL",
-    address: "3x7M...unkn",
-    time: "18 min ago",
-    verdict: "reject",
-    rationale: "Amount spike and unknown destination.",
-  },
-  {
-    id: "f-3",
-    agentId: "agt_7x9k",
-    amount: "0.5 SOL",
-    address: "Dex1...sw4p",
-    time: "45 min ago",
-    verdict: "approve",
-    rationale: "DEX route is in strategy whitelist.",
-  },
-  {
-    id: "f-4",
-    agentId: "agt_4nR1",
-    amount: "25 SOL",
-    address: "8mNp...2kQ9",
-    time: "1 hour ago",
-    verdict: "reject",
-    rationale: "Exceeded per-transaction policy cap.",
-  },
-  {
-    id: "f-5",
-    agentId: "agt_9pL5",
-    amount: "0.05 SOL",
-    address: "Api3...svc1",
-    time: "2 hours ago",
-    verdict: "approve",
-    rationale: "Micro-payment falls inside budget window.",
-  },
-  {
-    id: "f-6",
-    agentId: "agt_2kJ8",
-    amount: "1.2 SOL",
-    address: "Nft2...mkt7",
-    time: "3 hours ago",
-    verdict: "approve",
-    rationale: "Destination tied to verified marketplace cluster.",
-  },
-  {
-    id: "f-7",
-    agentId: "agt_6wX3",
-    amount: "15 SOL",
-    address: "5rTp...new0",
-    time: "4 hours ago",
-    verdict: "reject",
-    rationale: "New program interaction outside allowlist.",
-  },
-  {
-    id: "f-8",
-    agentId: "agt_1bQ7",
-    amount: "0.3 SOL",
-    address: "Pay1...sub9",
-    time: "5 hours ago",
-    verdict: "approve",
-    rationale: "Subscription flow recognized and confirmed.",
-  },
-];
-
-export default function Explorer({ onNavigate }: ExplorerProps) {
+export default function Explorer() {
+  const { explorerFeed, selectAgent } = useKyaRuntime();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return explorerFeed;
+    return explorerFeed.filter((item) => {
+      return (
+        item.agentId.toLowerCase().includes(q) ||
+        item.agentName.toLowerCase().includes(q) ||
+        item.recipient.toLowerCase().includes(q) ||
+        item.action.toLowerCase().includes(q) ||
+        item.decision.toLowerCase().includes(q)
+      );
+    });
+  }, [explorerFeed, query]);
 
   return (
     <main className="mx-auto max-w-7xl px-5 py-8">
@@ -107,21 +53,27 @@ export default function Explorer({ onNavigate }: ExplorerProps) {
             <input
               className="w-full bg-transparent text-sm text-[#1c2b24] outline-none"
               placeholder="Search by agent ID or wallet address"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
             />
           </div>
         </section>
 
         <section className="rounded-3xl border border-[#d3ddd7] bg-white/85 p-6 shadow-[0_10px_30px_rgba(47,74,60,0.08)] lg:col-span-12">
-          <h3 className="text-lg font-semibold text-[#1a2b23]">Recent Verifications</h3>
-          <p className="mt-1 text-xs text-[#5f7369]">Click a record to reveal rationale.</p>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold text-[#1a2b23]">Explorer Feed</h3>
+              <p className="mt-1 text-xs text-[#5f7369]">Auto-updating feed of recent verifications.</p>
+            </div>
+            <span className="rounded-full border border-[#d1ddd6] bg-[#f7faf8] px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-[#577064]">
+              Verification record
+            </span>
+          </div>
 
           <div className="mt-4 space-y-2">
-            {feedItems.map((item) => {
+            {filtered.map((item) => {
               const expanded = item.id === expandedId;
-              const verdictTone =
-                item.verdict === "approve"
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                  : "border-amber-200 bg-amber-50 text-amber-800";
+              const verdictTone = decisionTone(item.decision);
 
               return (
                 <article
@@ -136,24 +88,25 @@ export default function Explorer({ onNavigate }: ExplorerProps) {
                     >
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-sm text-[#1f3028]">{item.agentId}</span>
+                        <span className="text-sm text-[#4f6359]">{item.agentName}</span>
                         <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-[0.13em] ${verdictTone}`}>
-                          {item.verdict}
+                          {item.decision}
                         </span>
                       </div>
                       <p className="mt-1 flex items-center gap-1.5 text-sm text-[#4c6257]">
-                        <span className="font-mono text-[#1f3028]">{item.amount}</span>
-                        <span>-&gt; {item.address}</span>
+                        <span className="font-mono text-[#1f3028]">{item.amountSol.toFixed(3)} SOL</span>
+                        <span>-&gt; {item.recipient}</span>
                         <FaArrowRight className="text-[10px] text-emerald-600" />
                       </p>
                     </button>
 
                     <div className="flex items-center gap-2 text-xs text-[#5f7369]">
-                      <span>{item.time}</span>
+                      <span>{timeAgo(item.timestamp)}</span>
                       {expanded ? <FaChevronUp /> : <FaChevronDown />}
                       <button
                         type="button"
                         className="rounded-lg border border-[#d0dcd5] bg-white px-2 py-1 text-[10px] uppercase tracking-[0.12em] text-[#40564a] hover:border-[#b7c8be]"
-                        onClick={() => onNavigate("agent")}
+                        onClick={() => selectAgent(item.agentId)}
                       >
                         open
                       </button>
@@ -163,12 +116,19 @@ export default function Explorer({ onNavigate }: ExplorerProps) {
                   {expanded ? (
                     <div className="mt-3 rounded-xl border border-[#d7e2dc] bg-white px-3 py-2">
                       <p className="text-[11px] uppercase tracking-[0.14em] text-[#5f7369]">Rationale</p>
-                      <p className="mt-1 text-sm text-[#30433a]">{item.rationale}</p>
+                      <p className="mt-1 text-sm text-[#30433a]">{item.reasonShort}</p>
+                      <p className="mt-1 text-xs text-[#5f7369]">{item.recordTag}</p>
                     </div>
                   ) : null}
                 </article>
               );
             })}
+
+            {!filtered.length ? (
+              <div className="rounded-2xl border border-[#dbe4df] bg-[#f9fcfa] px-4 py-3 text-sm text-[#4f645a]">
+                No matching records.
+              </div>
+            ) : null}
           </div>
         </section>
       </div>
