@@ -1,12 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FaBolt, FaCheckCircle, FaFlask, FaMagic, FaTimesCircle } from "react-icons/fa";
 import { useKyaRuntime } from "../kya/KyaRuntime";
+import type { VerificationRequest } from "../kya/types";
 import VerificationStepper from "./VerificationStepper";
 
 export default function Demo() {
   const { agents, runVerification, activeVerification } = useKyaRuntime();
-  const [agentId, setAgentId] = useState<string>(agents[0]?.id ?? "");
-  const [actionType, setActionType] = useState("transfer");
+  const [agentId, setAgentId] = useState<string>("");
+  const [actionType, setActionType] = useState<VerificationRequest["action"]>("transfer");
   const [amount, setAmount] = useState("");
   const [address, setAddress] = useState("");
   const [context, setContext] = useState("");
@@ -14,6 +15,15 @@ export default function Demo() {
   const running = activeVerification?.running && activeVerification.agentId === agentId;
   const steps = activeVerification?.agentId === agentId ? activeVerification.steps : null;
   const result = activeVerification?.agentId === agentId ? activeVerification.result : null;
+
+  useEffect(() => {
+    if (agents.length === 0) return;
+    if (!agentId) {
+      setAgentId(agents[0].id);
+      return;
+    }
+    if (!agents.some((a) => a.id === agentId)) setAgentId(agents[0].id);
+  }, [agents, agentId]);
 
   const fillSuspicious = () => {
     setActionType("transfer");
@@ -33,7 +43,7 @@ export default function Demo() {
     if (!selectedAgent) return;
     runVerification({
       agentId: selectedAgent.id,
-      action: actionType as any,
+      action: actionType,
       amountSol: Number(amount || "0"),
       recipient: address,
       context,
@@ -71,12 +81,12 @@ export default function Demo() {
 
             <label className="block text-sm text-[#30443a]">
               Action type
-              <select
-                className="mt-1.5 w-full rounded-xl border border-[#d3dfd8] bg-[#f8fbf9] px-3 py-2.5 text-sm text-[#17261f] outline-none transition-colors duration-150 focus:border-emerald-400"
-                value={actionType}
-                onChange={(event) => setActionType(event.target.value)}
-                disabled={running}
-              >
+                <select
+                  className="mt-1.5 w-full rounded-xl border border-[#d3dfd8] bg-[#f8fbf9] px-3 py-2.5 text-sm text-[#17261f] outline-none transition-colors duration-150 focus:border-emerald-400"
+                  value={actionType}
+                  onChange={(event) => setActionType(event.target.value as VerificationRequest["action"])}
+                  disabled={running}
+                >
                 <option value="transfer">Transfer</option>
                 <option value="pay">Pay</option>
                 <option value="swap">Swap</option>
@@ -182,7 +192,7 @@ export default function Demo() {
               <dl className="space-y-2 text-[#4a6156]">
                 <div className="flex justify-between gap-3">
                   <dt>On-chain</dt>
-                  <dd className="font-medium text-[#1d2c25]">{result.wroteMockChainRecord ? "Mock write" : "Skipped"}</dd>
+                  <dd className="font-medium text-[#1d2c25]">{result.wroteMockChainRecord ? "API log write" : "Skipped"}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt>TX hash</dt>

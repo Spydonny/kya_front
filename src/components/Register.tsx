@@ -50,8 +50,7 @@ export default function Register() {
             Agent Registered
           </h2>
           <p className="mt-2 text-sm text-[#4f6359]">
-            Registration complete. Record stored locally and a <span className="font-medium">mock blockchain write</span> was
-            produced for the PDA mapping.
+            Registration complete via API. A signature and PDA mapping were returned by the backend verifier.
           </p>
 
           <dl className="mt-5 grid gap-3 sm:grid-cols-2">

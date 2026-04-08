@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FaCheckCircle, FaExternalLinkAlt, FaShieldAlt, FaTimesCircle } from "react-icons/fa";
 import { HiOutlineCheckBadge } from "react-icons/hi2";
 import { useKyaRuntime } from "../kya/KyaRuntime";
@@ -28,8 +28,17 @@ const statusStyles: Record<AgentStatus, { label: string; badge: string; dot: str
 };
 export default function Dashboard() {
   const { agents, selectAgent, navigate } = useKyaRuntime();
-  const [selectedAgentId, setSelectedAgentId] = useState<string>(agents[0]?.id ?? "");
+  const [selectedAgentId, setSelectedAgentId] = useState<string>("");
   const [filter, setFilter] = useState<AgentStatus | "all">("all");
+
+  useEffect(() => {
+    if (agents.length === 0) return;
+    if (!selectedAgentId) {
+      setSelectedAgentId(agents[0].id);
+      return;
+    }
+    if (!agents.some((a) => a.id === selectedAgentId)) setSelectedAgentId(agents[0].id);
+  }, [agents, selectedAgentId]);
 
   const selectedAgent = useMemo(
     () => agents.find((agent) => agent.id === selectedAgentId) ?? agents[0],
@@ -286,7 +295,7 @@ export default function Dashboard() {
           <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
             <p className="inline-flex items-center gap-2">
               <FaCheckCircle className="text-xs" />
-              Demo only: written as a mock blockchain record (not mainnet).
+              Verification records are written through the API simulator (not mainnet).
             </p>
           </div>
         </section>

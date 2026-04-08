@@ -56,21 +56,25 @@ export default function TrustGraphLive({
     const w = rect.width || 720;
     const h = rect.height || 240;
 
-    setNodes((prev) => {
-      const prevById = new Map(prev.map((n) => [n.id, n]));
-      return agents.map((agent, idx) => {
-        const existing = prevById.get(agent.id);
-        if (existing) return existing;
-        const jitter = (idx + 1) * 0.07;
-        return {
-          id: agent.id,
-          x: w * (0.18 + (idx % 3) * 0.28 + jitter),
-          y: h * (0.28 + Math.floor(idx / 3) * 0.34 + jitter),
-          vx: (Math.random() - 0.5) * 0.6,
-          vy: (Math.random() - 0.5) * 0.6,
-        };
+    const frame = requestAnimationFrame(() => {
+      setNodes((prev) => {
+        const prevById = new Map(prev.map((n) => [n.id, n]));
+        return agents.map((agent, idx) => {
+          const existing = prevById.get(agent.id);
+          if (existing) return existing;
+          const jitter = (idx + 1) * 0.07;
+          return {
+            id: agent.id,
+            x: w * (0.18 + (idx % 3) * 0.28 + jitter),
+            y: h * (0.28 + Math.floor(idx / 3) * 0.34 + jitter),
+            vx: (Math.random() - 0.5) * 0.6,
+            vy: (Math.random() - 0.5) * 0.6,
+          };
+        });
       });
     });
+
+    return () => cancelAnimationFrame(frame);
   }, [agents]);
 
   useEffect(() => {

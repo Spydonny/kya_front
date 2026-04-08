@@ -1,7 +1,10 @@
-import { FaChartBar, FaCompass, FaFlask, FaHome, FaLeaf } from "react-icons/fa";
+import type { ComponentType } from "react";
+import { FaChartBar, FaCompass, FaFlask, FaHome, FaCat } from "react-icons/fa";
 import { useKyaRuntime } from "../kya/KyaRuntime";
 
-const navItems = [
+type NavView = "landing" | "dashboard" | "explorer" | "demo";
+
+const navItems: Array<{ id: NavView; label: string; icon: ComponentType<{ className?: string }> }> = [
   { id: "landing", label: "Home", icon: FaHome },
   { id: "dashboard", label: "Dashboard", icon: FaChartBar },
   { id: "explorer", label: "Explorer", icon: FaCompass },
@@ -20,8 +23,8 @@ export default function Navbar() {
           className="inline-flex items-center gap-2 rounded-full border border-[#d5e1da] bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#1f3128] transition-colors duration-150 hover:border-[#b9ccc1]"
           onClick={() => navigate({ view: "landing" })}
         >
-          <FaLeaf className="text-[10px] text-emerald-600" />
-          KYA System
+          <FaCat className="text-[12px] text-emerald-600" />
+          KittYA
         </button>
 
         <nav className="flex flex-1 flex-wrap gap-2 text-xs uppercase tracking-[0.12em]">
@@ -38,7 +41,7 @@ export default function Navbar() {
                     ? "flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-emerald-800"
                     : "flex items-center gap-1.5 rounded-full border border-transparent px-3 py-1.5 text-[#5f7469] transition-colors duration-150 hover:border-[#c9d8d0] hover:bg-white hover:text-[#22352b]"
                 }
-                onClick={() => navigate({ view: item.id as any })}
+                onClick={() => navigate({ view: item.id })}
               >
                 <Icon className="text-[11px]" />
                 {item.label}

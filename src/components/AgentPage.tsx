@@ -58,7 +58,7 @@ export default function AgentPage({ agentId }: { agentId: string }) {
             </button>
           </div>
           <p className="mt-2 max-w-2xl text-sm text-[#4d6258]">
-            Demo only. All checks run with production-style delays and logged reasoning.
+            Verification runs through the API with production-style delays and logged reasoning.
           </p>
 
           <dl className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -123,7 +123,7 @@ export default function AgentPage({ agentId }: { agentId: string }) {
                 <select
                   className="mt-1.5 w-full rounded-xl border border-[#d3dfd8] bg-[#f8fbf9] px-3 py-2.5 text-sm text-[#17261f] outline-none transition-colors duration-150 focus:border-emerald-400"
                   value={action}
-                  onChange={(e) => setAction(e.target.value as any)}
+                  onChange={(e) => setAction(e.target.value as "transfer" | "pay" | "swap")}
                   disabled={running}
                 >
                   <option value="transfer">Transfer</option>
@@ -185,7 +185,7 @@ export default function AgentPage({ agentId }: { agentId: string }) {
               </button>
 
               <div className="rounded-xl border border-[#dbe5df] bg-white px-3 py-2 text-xs text-[#5f7369]">
-                Output includes: verdict, reasoning, trust delta, and a mock signature (not mainnet).
+                Output includes: verdict, reasoning, trust delta, and an API signature (not mainnet).
               </div>
             </div>
           </div>

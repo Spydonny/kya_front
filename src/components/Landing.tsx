@@ -1,12 +1,6 @@
 import { FaArrowRight, FaBan, FaCheckCircle, FaRobot, FaShieldAlt } from "react-icons/fa";
 import { useKyaRuntime } from "../kya/KyaRuntime";
 
-const stats = [
-  { value: "142", label: "Agents registered", icon: FaRobot, accent: "text-emerald-700" },
-  { value: "8,421", label: "Verifications", icon: FaShieldAlt, accent: "text-teal-700" },
-  { value: "312", label: "Rejected transactions", icon: FaBan, accent: "text-amber-700" },
-];
-
 const steps = [
   { title: "Register agent", description: "Create a profile, set limits, and derive an on-chain PDA." },
   { title: "Verify intent", description: "Every transaction is checked before execution." },
@@ -14,7 +8,22 @@ const steps = [
 ];
 
 export default function Landing() {
-  const { navigate } = useKyaRuntime();
+  const { navigate, agents } = useKyaRuntime();
+
+  const totals = agents.reduce(
+    (acc, a) => {
+      acc.verifications += a.totalChecks;
+      acc.rejections += a.rejectedActions;
+      return acc;
+    },
+    { verifications: 0, rejections: 0 },
+  );
+
+  const stats = [
+    { value: String(agents.length), label: "Agents registered", icon: FaRobot, accent: "text-emerald-700" },
+    { value: totals.verifications.toLocaleString("en-US"), label: "Verifications", icon: FaShieldAlt, accent: "text-teal-700" },
+    { value: totals.rejections.toLocaleString("en-US"), label: "Rejected transactions", icon: FaBan, accent: "text-amber-700" },
+  ];
 
   return (
     <main className="mx-auto max-w-7xl px-5 py-8">
